@@ -24,6 +24,29 @@ function HeaderContent({ currentPoints = 0, userName, systemRoleId }: HeaderProp
 
   const isAdmin = systemRoleId === 1;
 
+  // ▼▼▼ ここに追加 ▼▼▼
+  type Sparkle = { id: string; x: number; y: number; size: number; rotate: number };
+  const [sparkles, setSparkles] = useState<Sparkle[]>([]);
+
+  const spawnSparkles = (x: number, y: number) => {
+    const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const newOnes: Sparkle[] = Array.from({ length: 12 }).map(() => ({
+      id: crypto.randomUUID(),
+      x: x + rand(-18, 18),
+      y: y + rand(-18, 18),
+      size: rand(6, 12),
+      rotate: rand(0, 360),
+    }));
+
+    setSparkles((prev) => [...prev, ...newOnes]);
+
+    setTimeout(() => {
+      setSparkles((prev) => prev.filter((s) => !newOnes.some((n) => n.id === s.id)));
+    }, 800);
+  };
+  // ▲▲▲ ここまで追加 ▲▲▲
+
   // メニュー外をクリックしたら閉じる
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -102,6 +125,7 @@ function HeaderContent({ currentPoints = 0, userName, systemRoleId }: HeaderProp
           {/* ポイント表示（クリックでポイントページへ） */}
           <Link 
             href="/points"
+            onClick={(e) => spawnSparkles(e.clientX, e.clientY)}
             className="flex items-center space-x-1 rounded-full bg-pink-50 px-3 py-1.5 text-pink-600 hover:bg-pink-100 transition-colors"
             title="ポイント詳細を見る"
           >
@@ -183,6 +207,33 @@ function HeaderContent({ currentPoints = 0, userName, systemRoleId }: HeaderProp
           </div>
         </div>
       </div>
+      {/* sparkle layer */}
+<div className="pointer-events-none fixed inset-0 z-[9999]">
+  {sparkles.map((s) => (
+    <span
+      key={s.id}
+      style={{
+        position: 'absolute',
+        left: s.x,
+        top: s.y,
+        width: s.size,
+        height: s.size,
+        transform: `translate(-50%, -50%) rotate(${s.rotate}deg)`,
+        animation: 'sparkle-pop 0.8s ease-out forwards',
+      }}
+      className="bg-yellow-300 shadow rounded-sm"
+    />
+  ))}
+</div>
+
+<style jsx global>{`
+  @keyframes sparkle-pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6) rotate(0deg); }
+    10% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -90%) scale(1.7) rotate(180deg); }
+  }
+`}</style>
+
     </header>
   );
 }
